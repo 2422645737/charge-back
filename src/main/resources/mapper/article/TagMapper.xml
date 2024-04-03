@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanghui.shiyue.article.dao.TagMapper">
+    <sql id="baseSQL">
+        tag.tag_id,
+        tag.tag_name,
+        tag.invalid_flag,
+        tag.create_time,
+        tag.update_time
+    </sql>
+    <select id="findAllTags" resultType="com.wanghui.shiyue.article.entity.po.TagPO">
+        SELECT
+            <include refid="baseSQL"/>
+        FROM tag
+    </select>
+
+    <select id="findByName" resultType="com.wanghui.shiyue.article.entity.po.TagPO">
+        SELECT
+            <include refid="baseSQL"></include>
+        FROM tag
+        where tag_name = #{tagName}
+    </select>
+
+    <select id="getArticleTags" resultType="com.wanghui.shiyue.article.entity.po.TagPO">
+        SELECT
+        <include refid="baseSQL"></include>
+        FROM tag
+        left join article_vs_tag avt on avt.tag_id = tag.tag_id
+        where avt.article_id = #{articleId}
+    </select>
+
+    <select id="tagsCount" resultType="com.wanghui.shiyue.article.entity.po.TagPO">
+        SELECT
+        tag_id,count(*) as nums
+        FROM article_vs_tag
+        where tag_id in (
+        <foreach collection="tagIds" item="item" separator=",">
+            #{item}
+        </foreach>
+            )
+        group by tag_id
+    </select>
+</mapper>
