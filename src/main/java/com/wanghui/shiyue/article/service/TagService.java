@@ -43,4 +43,12 @@ public interface TagService {
      * @return {@link List }<{@link TagDTO }>
      */
     List<TagDTO> tagsCount(List<Long> tagIds);
+
+    /**
+     * 通过tag名称获取tag
+     * @param tags
+     * @return {@link List }<{@link TagDTO }>
+     */
+
+    List<TagDTO> getTagByName(List<String> tags);
 }

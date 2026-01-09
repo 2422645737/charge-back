@@ -13,11 +13,10 @@ import com.wanghui.shiyue.article.service.TagService;
 import com.wanghui.shiyue.comm.codes.BaseCode;
 import com.wanghui.shiyue.comm.entity.ResponseResult;
 import com.wanghui.shiyue.comm.utils.IdGenerator;
-import io.swagger.models.auth.In;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -83,5 +82,16 @@ public class TagServiceImpl implements TagService {
         List<TagDTO> tagDTOS = tagConvert.posToDto(tagMapper.tagsCount(tagIds));
 
         return tagDTOS;
+    }
+
+    /**
+     * 通过标签名批量获取标签信息
+     * @param tags
+     * @return {@link List }<{@link TagDTO }>
+     */
+
+    @Override
+    public List<TagDTO> getTagByName(List<String> tags) {
+        return tagConvert.posToDto(tagMapper.findByNames(tags));
     }
 }

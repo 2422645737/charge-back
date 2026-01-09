@@ -1,6 +1,7 @@
 package com.wanghui.shiyue.article.service;
 
 import com.wanghui.shiyue.article.entity.dto.ArticleDTO;
+import com.wanghui.shiyue.article.entity.dto.ArticleQueryParam;
 import com.wanghui.shiyue.article.entity.dto.TagDTO;
 
 import java.util.List;
@@ -21,4 +22,27 @@ public interface ArticleService {
      */
     ArticleDTO findById(Long articleId);
 
+    /**
+     * 通过tag查询文章
+     * @param tags
+     * @return {@link List }<{@link ArticleDTO }>
+     */
+
+    List<ArticleDTO> findByTags(List<String> tags);
+
+    /**
+     * 通过文章类型查询文章
+     * @param classId
+     * @return {@link List }<{@link ArticleDTO }>
+     */
+
+    List<ArticleDTO> findByClassId(Long classId);
+
+    /**
+     * 多条件查询
+     * @param param
+     * @return {@link List }<{@link ArticleDTO }>
+     */
+
+    List<ArticleDTO> find(ArticleQueryParam param);
 }

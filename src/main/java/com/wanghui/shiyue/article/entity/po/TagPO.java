@@ -4,9 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.wanghui.shiyue.comm.entity.BasePO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.models.auth.In;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -19,21 +17,20 @@ import org.apache.commons.lang3.math.NumberUtils;
  * @copyright: 众阳健康
  */
 @Data
-@ApiModel("文章tag")
 @TableName("tag")
 public class TagPO extends BasePO {
 
-    @ApiModelProperty("标签id")
+    @Schema($schema = "标签id")
     @TableId
     private Long tagId;
 
-    @ApiModelProperty("标签名称")
+    @Schema($schema = "标签名称")
     private String tagName;
 
-    @ApiModelProperty("作废标识")
+    @Schema($schema = "作废标识")
     private String invalidFlag;
 
-    @ApiModelProperty("标签下文章数量")
+    @Schema($schema = "标签下文章数量")
     @TableField(exist = false)
     private Integer nums;
     @Override

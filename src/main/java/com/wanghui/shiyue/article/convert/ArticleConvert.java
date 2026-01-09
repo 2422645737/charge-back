@@ -5,6 +5,8 @@ import com.wanghui.shiyue.article.entity.po.ArticlePO;
 import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * @description: 文章实体类转化
  * @fileName: ArticleConvert
@@ -29,4 +31,11 @@ public interface ArticleConvert {
      * @return {@link ArticlePO }
      */
     ArticlePO dtoToPo(ArticleDTO articleDTO);
+
+    /**
+     * @param articlePOs
+     * @return {@link List }<{@link ArticleDTO }>
+     */
+
+    List<ArticleDTO> posToDto(List<ArticlePO> articlePOs);
 }

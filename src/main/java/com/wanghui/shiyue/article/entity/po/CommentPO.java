@@ -4,8 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.wanghui.shiyue.comm.entity.BaseDTO;
 import com.wanghui.shiyue.comm.entity.BasePO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
@@ -19,31 +18,30 @@ import java.util.List;
  * @copyright: 众阳健康
  */
 @Data
-@ApiModel("文章评论类")
 @TableName("comment")
 public class CommentPO extends BasePO {
     @TableId
-    @ApiModelProperty("评论id")
+    @Schema($schema = "评论id")
     private Long commentId;
 
-    @ApiModelProperty("文章id")
+    @Schema($schema = "文章id")
     private Long articleId;
 
-    @ApiModelProperty("文章标题")
+    @Schema($schema = "文章标题")
     private String title;
 
-    @ApiModelProperty("评论内容")
+    @Schema($schema = "评论内容")
     private String content;
 
-    @ApiModelProperty("用户id")
+    @Schema($schema = "用户id")
     private Long userId;
 
-    @ApiModelProperty("用户名")
+    @Schema($schema = "用户名")
     private String userName;
 
-    @ApiModelProperty("父id")
+    @Schema($schema = "父id")
     private Long parentId;
 
-    @ApiModelProperty("子评论")
+    @Schema($schema = "子评论")
     private List<CommentPO> childComments;
 }

@@ -3,8 +3,7 @@ package com.wanghui.shiyue.article.entity.po;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.wanghui.shiyue.comm.entity.BasePO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -17,19 +16,29 @@ import lombok.Data;
  */
 @Data
 @TableName(value = "article")
-@ApiModel("文章表实体类")
 public class ArticlePO extends BasePO {
     @TableId
-    @ApiModelProperty("文章id")
+    @Schema($schema = "文章id")
     private Long articleId;
 
-    @ApiModelProperty("目录id")
+    @Schema($schema = "目录id")
     private Long catalogId;
 
-    @ApiModelProperty("文章标题")
+    @Schema($schema = "文章标题")
     private String title;
 
-    @ApiModelProperty("文章内容")
+    @Schema($schema = "文章内容")
     private String content;
 
+    @Schema($schema = "文章类型信息")
+    private Long classId;
+
+    @Schema($schema = "摘要")
+    private String summary;
+
+    @Schema($schema = "文章封面地址")
+    private String cover;
+
+    @Schema($schema = "作废标识")
+    private String invalidFlag;
 }

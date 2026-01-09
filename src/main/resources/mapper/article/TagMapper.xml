@@ -25,19 +25,29 @@
         SELECT
         <include refid="baseSQL"></include>
         FROM tag
-        left join article_vs_tag avt on avt.tag_id = tag.tag_id
+        left join article_tag avt on avt.tag_id = tag.tag_id
         where avt.article_id = #{articleId}
     </select>
 
     <select id="tagsCount" resultType="com.wanghui.shiyue.article.entity.po.TagPO">
         SELECT
         tag_id,count(*) as nums
-        FROM article_vs_tag
+        FROM article_tag
         where tag_id in (
         <foreach collection="tagIds" item="item" separator=",">
             #{item}
         </foreach>
             )
         group by tag_id
+    </select>
+    <select id="findByNames" resultType="com.wanghui.shiyue.article.entity.po.TagPO">
+        SELECT
+        <include refid="baseSQL"></include>
+        FROM tag
+        where tag_name in (
+        <foreach collection="tags" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
     </select>
 </mapper>

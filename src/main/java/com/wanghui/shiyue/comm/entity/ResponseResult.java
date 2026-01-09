@@ -2,7 +2,7 @@ package com.wanghui.shiyue.comm.entity;
 
 import com.wanghui.shiyue.comm.codes.BaseCode;
 import com.wanghui.shiyue.comm.inter.IErrorCode;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -17,22 +17,22 @@ import java.io.Serializable;
  */
 @Data
 public class ResponseResult<T> implements Serializable {
-    @ApiModelProperty("标记是否成功")
+    @Schema($schema = "标记是否成功")
     private boolean success;
 
-    @ApiModelProperty("错误码")
+    @Schema($schema = "错误码")
     private String code;
 
-    @ApiModelProperty("错误信息")
+    @Schema($schema = "错误信息")
     private String message;
 
-    @ApiModelProperty("返回对象")
+    @Schema($schema = "返回对象")
     private T data;
 
-    @ApiModelProperty("跟踪ID")
+    @Schema($schema = "跟踪ID")
     private String traceId;
 
-    @ApiModelProperty("异常名称")
+    @Schema($schema = "异常名称")
     private String exceptionName;
 
     public boolean isSuccess(){

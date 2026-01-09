@@ -1,9 +1,7 @@
 package com.wanghui.shiyue.article.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.wanghui.shiyue.article.entity.dto.TagDTO;
 import com.wanghui.shiyue.article.entity.po.ArticlePO;
-import com.wanghui.shiyue.article.entity.po.TagPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -18,13 +16,13 @@ import java.util.List;
  * @copyright: 众阳健康
  */
 @Mapper
-public interface ArticleMapper extends BaseMapper<ArticlePO> {
+public interface ArticleTagMapper extends BaseMapper<ArticlePO> {
 
     /**
-     * 通过classId查询文章
-     * @param classId
-     * @return {@link List }<{@link ArticlePO }>
+     * 通过tagId获取关联文章信息
+     * @param tagIds
+     * @return {@link List }<{@link Long }>
      */
 
-    List<ArticlePO> queryByClassId(@Param("classId") Long classId);
+    List<Long> getArticlesByTags(@Param("tagIds") List<Long> tagIds);
 }

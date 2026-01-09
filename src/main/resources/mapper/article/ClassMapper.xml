@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanghui.shiyue.article.dao.ClassMapper">
+    <select id="findAllClass" resultType="com.wanghui.shiyue.article.entity.po.ClassPO">
+        SELECT class_id,class_name,invalid_flag
+        FROM class
+    </select>
+    <select id="countByClassIdList" resultType="com.wanghui.shiyue.article.entity.dto.ClassDTO">
+        SELECT class_id,count(article_id) AS count
+        FROM article
+        WHERE class_id IN
+        <foreach item="classId" collection="classIdList" separator="," open="(" close=")">
+            #{classId}
+        </foreach>
+        GROUP BY class_id
+    </select>
+</mapper>

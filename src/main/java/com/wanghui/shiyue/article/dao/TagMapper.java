@@ -46,4 +46,12 @@ public interface TagMapper extends BaseMapper<TagPO> {
      * @return {@link List }<{@link TagPO }>
      */
     List<TagPO> tagsCount(@Param("tagIds") List<Long> tagIds);
+
+    /**
+     * 通过tag名称查询tag
+     * @param tags
+     * @return {@link List }<{@link TagPO }>
+     */
+
+    List<TagPO> findByNames(@Param("tags") List<String> tags);
 }

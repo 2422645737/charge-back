@@ -2,8 +2,7 @@ package com.wanghui.shiyue.article.entity.dto;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.wanghui.shiyue.comm.entity.BaseDTO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -15,18 +14,17 @@ import lombok.Data;
  * @copyright: 众阳健康
  */
 @Data
-@ApiModel("文章tag")
 public class TagDTO extends BaseDTO {
 
-    @ApiModelProperty("标签id")
+    @Schema($schema = "标签id")
     private Long tagId;
 
-    @ApiModelProperty("标签名称")
+    @Schema($schema = "标签名称")
     private String tagName;
 
-    @ApiModelProperty("作废标识")
+    @Schema($schema = "作废标识")
     private String invalidFlag;
 
-    @ApiModelProperty("标签下文章数量")
+    @Schema($schema = "标签下文章数量")
     private Integer nums;
 }

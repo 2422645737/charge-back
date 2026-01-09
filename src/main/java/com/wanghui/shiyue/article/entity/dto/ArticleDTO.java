@@ -1,8 +1,7 @@
 package com.wanghui.shiyue.article.entity.dto;
 
 import com.wanghui.shiyue.comm.entity.BaseDTO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
@@ -16,20 +15,31 @@ import java.util.List;
  * @copyright: 众阳健康
  */
 @Data
-@ApiModel("文章类")
 public class ArticleDTO extends BaseDTO {
-    @ApiModelProperty("文章id")
+    @Schema($schema = "文章id")
     private Long articleId;
 
-    @ApiModelProperty("目录id")
+    @Schema($schema = "目录id")
     private Long catalogId;
 
-    @ApiModelProperty("文章标题")
+    @Schema($schema = "文章标题")
     private String title;
 
-    @ApiModelProperty("文章内容")
+    @Schema($schema = "文章内容")
     private String content;
 
-    @ApiModelProperty("标签信息")
+    @Schema($schema = "标签信息")
     private List<TagDTO> tagList;
+
+    @Schema($schema = "文章类型信息")
+    private Long classId;
+
+    @Schema($schema = "摘要")
+    private String summary;
+
+    @Schema($schema = "文章封面地址")
+    private String cover;
+
+    @Schema($schema = "作废标识")
+    private String invalidFlag;
 }
