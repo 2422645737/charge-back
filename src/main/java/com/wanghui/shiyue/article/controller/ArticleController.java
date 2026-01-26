@@ -9,6 +9,8 @@ import com.wanghui.shiyue.comm.entity.ResponseResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.apache.catalina.util.RateLimiter;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -28,6 +30,9 @@ import java.util.List;
 public class ArticleController {
     @Resource
     ArticleService articleService;
+
+    @Resource
+    KafkaTemplate<String,String> kafkaTemplate;
 
     @Operation(summary = "通过id获取文章内容")
     @GetMapping("findById")
@@ -52,5 +57,22 @@ public class ArticleController {
     public ResponseResult<List<ArticleDTO>> find(@RequestBody ArticleQueryParam param){
         return ResponseResult.success(articleService.find(param));
     }
+
+    @Operation(summary = "保存文章")
+    @PostMapping("save")
+    public ResponseResult<Boolean> save(@RequestBody ArticleDTO articleDTO){
+        return ResponseResult.success(articleService.save(articleDTO));
+    }
+
+
+    @Operation(summary = "发送消息")
+    @GetMapping("send")
+    public ResponseResult send(@RequestParam("send") String message){
+        for(int i = 0;i < 10000;i++){
+            kafkaTemplate.send("test-topic",message);
+        }
+        return null;
+    }
+
 
 }

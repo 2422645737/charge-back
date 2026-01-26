@@ -9,4 +9,15 @@
             #{tagId}
         </foreach>
     </select>
+
+    <insert id="saveArticleTags">
+        insert into article_tag (article_id, tag_id) values
+        <foreach item="tagId" collection="tagIds" separator=",">
+            (#{articleId}, #{tagId})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByArticleId">
+        delete from article_tag where article_id = #{articleId}
+    </delete>
 </mapper>

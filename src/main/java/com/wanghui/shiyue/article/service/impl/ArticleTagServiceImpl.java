@@ -20,4 +20,20 @@ public class ArticleTagServiceImpl implements ArticleTagService {
     public List<Long> getArticlesByTags(List<Long> tagIds) {
         return articleTagMapper.getArticlesByTags(tagIds);
     }
+
+    @Override
+    public Boolean saveArticleTags(Long articleId, List<Long> tagIds) {
+        if (articleId == null || tagIds == null || tagIds.isEmpty()) {
+            return false;
+        }
+        return articleTagMapper.saveArticleTags(articleId, tagIds) > 0;
+    }
+
+    @Override
+    public Boolean deleteByArticleId(Long articleId) {
+        if (articleId == null) {
+            return false;
+        }
+        return articleTagMapper.deleteByArticleId(articleId) > 0;
+    }
 }

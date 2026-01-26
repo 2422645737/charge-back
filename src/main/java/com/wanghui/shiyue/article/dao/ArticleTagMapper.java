@@ -25,4 +25,19 @@ public interface ArticleTagMapper extends BaseMapper<ArticlePO> {
      */
 
     List<Long> getArticlesByTags(@Param("tagIds") List<Long> tagIds);
+
+    /**
+     * 保存文章标签关联
+     * @param articleId
+     * @param tagIds
+     * @return int
+     */
+    int saveArticleTags(@Param("articleId") Long articleId, @Param("tagIds") List<Long> tagIds);
+
+    /**
+     * 根据文章id删除标签关联
+     * @param articleId
+     * @return int
+     */
+    int deleteByArticleId(@Param("articleId") Long articleId);
 }

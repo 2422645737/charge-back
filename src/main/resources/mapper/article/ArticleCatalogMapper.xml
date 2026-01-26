@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wanghui.shiyue.article.dao.ArticleCatalogMapper">
+
+    <!-- 根据文章id查询关联的目录 -->
+    <select id="selectByArticleId" resultType="com.wanghui.shiyue.article.entity.po.ArticleCatalogPO">
+        select a.*, b.name as catalog_name from web.article_catalog  a
+        left join web.catalog b on a.catalog_id = b.catalog_id
+        where a.article_id = #{articleId}
+    </select>
+
+    <!-- 根据目录id查询关联的文章 -->
+    <select id="selectByCatalogId" resultType="com.wanghui.shiyue.article.entity.po.ArticleCatalogPO">
+        select a.*, b.name as catalog_name from web.article_catalog a
+        left join web.catalog b on a.catalog_id = b.catalog_id
+        where a.catalog_id = #{catalogId}
+    </select>
+
+    <!-- 根据文章id和目录id查询关联关系 -->
+    <select id="selectByArticleIdAndCatalogId" resultType="com.wanghui.shiyue.article.entity.po.ArticleCatalogPO">
+        select * from web.article_catalog where article_id = #{articleId} and catalog_id = #{catalogId}
+    </select>
+
+    <!-- 根据文章id删除关联的目录 -->
+    <delete id="deleteByArticleId">
+        delete from web.article_catalog where article_id = #{articleId}
+    </delete>
+
+    <!-- 根据目录id删除关联的文章 -->
+    <delete id="deleteByCatalogId">
+        delete from web.article_catalog where catalog_id = #{catalogId}
+    </delete>
+
+</mapper>

@@ -45,4 +45,11 @@ public interface ArticleService {
      */
 
     List<ArticleDTO> find(ArticleQueryParam param);
+
+    /**
+     * 保存文章
+     * @param articleDTO
+     * @return {@link Boolean }
+     */
+    Boolean save(ArticleDTO articleDTO);
 }

@@ -42,4 +42,16 @@ public class ArticleDTO extends BaseDTO {
 
     @Schema($schema = "作废标识")
     private String invalidFlag;
+
+    @Schema($schema = "目录名称")
+    private String catalogName;
+
+    @Schema($schema = "目录路径")
+    private String catalogPath;
+
+    @Schema($schema = "目录信息")
+    private CatalogDTO catalog;
+
+    @Schema($schema = "文章所属目录列表")
+    private List<CatalogDTO> catalogList;
 }

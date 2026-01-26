@@ -23,4 +23,19 @@ public interface ArticleTagService {
      */
 
     List<Long> getArticlesByTags(List<Long> tagIds);
+
+    /**
+     * 保存文章标签关联
+     * @param articleId
+     * @param tagIds
+     * @return {@link Boolean }
+     */
+    Boolean saveArticleTags(Long articleId, List<Long> tagIds);
+
+    /**
+     * 根据文章id删除标签关联
+     * @param articleId
+     * @return {@link Boolean }
+     */
+    Boolean deleteByArticleId(Long articleId);
 }

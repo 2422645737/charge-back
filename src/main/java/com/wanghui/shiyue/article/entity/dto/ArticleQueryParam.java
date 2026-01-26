@@ -12,4 +12,12 @@ public class ArticleQueryParam {
     private List<Long> tagIds;
 
     private Long articleID;
+    
+    private Long catalogId;
+    
+    private List<Long> catalogIds;
+    
+    private Integer catalogLevel;
+    
+    private String catalogPath;
 }
