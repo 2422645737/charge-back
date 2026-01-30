@@ -148,6 +148,13 @@
                 <configuration>
                     <mainClass>com.wanghui.shiyue.ShiyueApplication</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             
             <!-- Maven Surefire 插件 -->
