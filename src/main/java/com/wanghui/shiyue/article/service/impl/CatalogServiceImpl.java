@@ -68,11 +68,10 @@ public class CatalogServiceImpl implements CatalogService {
             throw new IllegalArgumentException("目录名称不能为空");
         }
 
-        // 构建目录路径
-        if (catalogDTO.getParentId() == null || catalogDTO.getParentId() == 0) {
+        // 设置目录层级
+        if (catalogDTO.getParentId() == null || catalogDTO.getParentId() == -1) {
             // 顶级目录
             catalogDTO.setLevel(1);
-            catalogDTO.setPath("1"); // 暂时使用简单的路径，实际应该根据最大id生成
         } else {
             // 子目录
             CatalogPO parentCatalog = catalogMapper.selectById(catalogDTO.getParentId());
@@ -80,7 +79,6 @@ public class CatalogServiceImpl implements CatalogService {
                 throw new IllegalArgumentException("父目录不存在");
             }
             catalogDTO.setLevel(parentCatalog.getLevel() + 1);
-            catalogDTO.setPath(parentCatalog.getPath() + "/" + (catalogMapper.selectCount(null) + 1)); // 暂时使用简单的路径生成
         }
 
         // 转换为PO并保存
@@ -122,16 +120,11 @@ public class CatalogServiceImpl implements CatalogService {
             throw new IllegalArgumentException("目录下存在子目录，无法删除");
         }
 
-        // 逻辑删除目录
-        catalogPO.setInvalidFlag("1");
-        return catalogMapper.updateById(catalogPO) > 0;
+        // 删除目录
+        return catalogMapper.deleteById(catalogId) > 0;
     }
 
-    @Override
-    public CatalogDTO getByPath(String path) {
-        CatalogPO catalogPO = catalogMapper.selectByPath(path);
-        return catalogConvert.poToDto(catalogPO);
-    }
+
 
     @Override
     public List<CatalogDTO> getByLevel(Integer level) {
@@ -156,7 +149,7 @@ public class CatalogServiceImpl implements CatalogService {
 
         // 构建目录树
         for (CatalogDTO catalogDTO : catalogDTOS) {
-            if (catalogDTO.getParentId() == null || catalogDTO.getParentId() == 0) {
+            if (catalogDTO.getParentId() == null || catalogDTO.getParentId() == -1) {
                 // 顶级目录
                 rootCatalogs.add(catalogDTO);
             } else {

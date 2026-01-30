@@ -33,10 +33,10 @@ public interface ArticleCatalogService {
     /**
      * 保存文章与目录的关联关系
      * @param articleId 文章id
-     * @param catalogIds 目录id列表
+     * @param catalogId 目录id
      * @return {@link Boolean }
      */
-    Boolean saveArticleCatalogs(Long articleId, List<Long> catalogIds);
+    Boolean saveArticleCatalog(Long articleId, Long catalogId);
 
     /**
      * 删除文章与目录的关联关系
@@ -46,24 +46,9 @@ public interface ArticleCatalogService {
     Boolean deleteByArticleId(Long articleId);
 
     /**
-     * 删除文章与指定目录的关联关系
-     * @param articleId 文章id
-     * @param catalogId 目录id
-     * @return {@link Boolean }
-     */
-    Boolean deleteByArticleIdAndCatalogId(Long articleId, Long catalogId);
-
-    /**
      * 根据目录id删除关联的文章
      * @param catalogId 目录id
      * @return {@link Boolean }
      */
     Boolean deleteByCatalogId(Long catalogId);
-
-    /**
-     * 获取文章的目录树
-     * @param articleId 文章id
-     * @return {@link List }<{@link CatalogDTO }>
-     */
-    List<CatalogDTO> getArticleCatalogTree(Long articleId);
 }

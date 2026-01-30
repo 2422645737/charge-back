@@ -101,11 +101,10 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
         <!-- Spring AI 核心依赖 -->
-
-
-
-        <!-- 如果不添加此节点src/main/java目录下的所有配置文件都会被漏掉。 -->
-
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server</artifactId>
+        </dependency>
 
     </dependencies>
     <dependencyManagement>

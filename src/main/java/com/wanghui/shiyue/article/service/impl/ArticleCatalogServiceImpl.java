@@ -34,13 +34,7 @@ public class ArticleCatalogServiceImpl implements ArticleCatalogService {
     private ArticleCatalogMapper articleCatalogMapper;
 
     @Resource
-    private CatalogMapper catalogMapper;
-
-    @Resource
     private ArticleCatalogConvert articleCatalogConvert;
-
-    @Resource
-    private CatalogConvert catalogConvert;
 
     @Override
     public List<ArticleCatalogDTO> getByArticleId(Long articleId) {
@@ -56,8 +50,8 @@ public class ArticleCatalogServiceImpl implements ArticleCatalogService {
 
     @Override
     @Transactional
-    public Boolean saveArticleCatalogs(Long articleId, List<Long> catalogIds) {
-        if (articleId == null || catalogIds == null || catalogIds.isEmpty()) {
+    public Boolean saveArticleCatalog(Long articleId, Long catalogId) {
+        if (articleId == null || catalogId == null) {
             return false;
         }
 
@@ -65,12 +59,10 @@ public class ArticleCatalogServiceImpl implements ArticleCatalogService {
         articleCatalogMapper.deleteByArticleId(articleId);
 
         // 保存新关联
-        for (Long catalogId : catalogIds) {
-            ArticleCatalogPO articleCatalogPO = new ArticleCatalogPO();
-            articleCatalogPO.setArticleId(articleId);
-            articleCatalogPO.setCatalogId(catalogId);
-            articleCatalogMapper.insert(articleCatalogPO);
-        }
+        ArticleCatalogPO articleCatalogPO = new ArticleCatalogPO();
+        articleCatalogPO.setArticleId(articleId);
+        articleCatalogPO.setCatalogId(catalogId);
+        articleCatalogMapper.insert(articleCatalogPO);
 
         return true;
     }
@@ -86,81 +78,10 @@ public class ArticleCatalogServiceImpl implements ArticleCatalogService {
 
     @Override
     @Transactional
-    public Boolean deleteByArticleIdAndCatalogId(Long articleId, Long catalogId) {
-        if (articleId == null || catalogId == null) {
-            return false;
-        }
-        ArticleCatalogPO articleCatalogPO = articleCatalogMapper.selectByArticleIdAndCatalogId(articleId, catalogId);
-        if (articleCatalogPO == null) {
-            return false;
-        }
-        return articleCatalogMapper.deleteById(articleCatalogPO.getArticleCatalogId()) > 0;
-    }
-
-    @Override
-    @Transactional
     public Boolean deleteByCatalogId(Long catalogId) {
         if (catalogId == null) {
             return false;
         }
         return articleCatalogMapper.deleteByCatalogId(catalogId) > 0;
-    }
-
-    @Override
-    public List<CatalogDTO> getArticleCatalogTree(Long articleId) {
-        if (articleId == null) {
-            return new ArrayList<>();
-        }
-
-        // 获取文章关联的目录
-        List<ArticleCatalogPO> articleCatalogPOS = articleCatalogMapper.selectByArticleId(articleId);
-        if (articleCatalogPOS.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 构建目录列表
-        List<CatalogPO> catalogPOS = new ArrayList<>();
-        for (ArticleCatalogPO articleCatalogPO : articleCatalogPOS) {
-            CatalogPO catalogPO = catalogMapper.selectById(articleCatalogPO.getCatalogId());
-            if (catalogPO != null) {
-                catalogPOS.add(catalogPO);
-            }
-        }
-
-        // 转换为DTO并构建树状结构
-        List<CatalogDTO> catalogDTOS = catalogConvert.posToDto(catalogPOS);
-        return buildCatalogTree(catalogDTOS);
-    }
-
-    /**
-     * 构建目录树状结构
-     * @param catalogDTOS 目录DTO列表
-     * @return {@link List }<{@link CatalogDTO }>
-     */
-    private List<CatalogDTO> buildCatalogTree(List<CatalogDTO> catalogDTOS) {
-        List<CatalogDTO> rootCatalogs = new ArrayList<>();
-
-        // 构建目录映射
-        java.util.Map<Long, CatalogDTO> catalogMap = new java.util.HashMap<>();
-        for (CatalogDTO catalogDTO : catalogDTOS) {
-            catalogMap.put(catalogDTO.getCatalogId(), catalogDTO);
-            catalogDTO.setChildren(new ArrayList<>());
-        }
-
-        // 构建目录树
-        for (CatalogDTO catalogDTO : catalogDTOS) {
-            if (catalogDTO.getParentId() == null || catalogDTO.getParentId() == 0) {
-                // 顶级目录
-                rootCatalogs.add(catalogDTO);
-            } else {
-                // 子目录
-                CatalogDTO parentCatalog = catalogMap.get(catalogDTO.getParentId());
-                if (parentCatalog != null) {
-                    parentCatalog.getChildren().add(catalogDTO);
-                }
-            }
-        }
-
-        return rootCatalogs;
     }
 }

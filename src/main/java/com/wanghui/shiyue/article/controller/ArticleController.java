@@ -60,7 +60,7 @@ public class ArticleController {
 
     @Operation(summary = "保存文章")
     @PostMapping("save")
-    public ResponseResult<Boolean> save(@RequestBody ArticleDTO articleDTO){
+    public ResponseResult<ArticleDTO> save(@RequestBody ArticleDTO articleDTO){
         return ResponseResult.success(articleService.save(articleDTO));
     }
 

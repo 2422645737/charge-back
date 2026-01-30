@@ -20,7 +20,7 @@ public class CatalogDTO extends BaseDTO {
     @Schema($schema = "目录id")
     private Long catalogId;
 
-    @Schema($schema = "父目录id，顶级目录为0")
+    @Schema($schema = "父目录id，顶级目录为-1")
     private Long parentId;
 
     @Schema($schema = "目录名称")
@@ -28,12 +28,6 @@ public class CatalogDTO extends BaseDTO {
 
     @Schema($schema = "目录层级，从1开始")
     private Integer level;
-
-    @Schema($schema = "目录路径，如 \"1/2/3\"")
-    private String path;
-
-    @Schema($schema = "作废标识")
-    private String invalidFlag;
 
     @Schema($schema = "子目录列表")
     private List<CatalogDTO> children;

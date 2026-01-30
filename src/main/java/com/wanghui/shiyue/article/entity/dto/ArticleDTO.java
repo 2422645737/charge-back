@@ -19,7 +19,7 @@ public class ArticleDTO extends BaseDTO {
     @Schema($schema = "文章id")
     private Long articleId;
 
-    @Schema($schema = "目录id")
+    @Schema($schema = "父目录id")
     private Long catalogId;
 
     @Schema($schema = "文章标题")
@@ -27,6 +27,9 @@ public class ArticleDTO extends BaseDTO {
 
     @Schema($schema = "文章内容")
     private String content;
+
+    @Schema($schema = "文章状态 0：草稿   1：已保存")
+    private Integer status;
 
     @Schema($schema = "标签信息")
     private List<TagDTO> tagList;
@@ -46,12 +49,6 @@ public class ArticleDTO extends BaseDTO {
     @Schema($schema = "目录名称")
     private String catalogName;
 
-    @Schema($schema = "目录路径")
-    private String catalogPath;
-
     @Schema($schema = "目录信息")
     private CatalogDTO catalog;
-
-    @Schema($schema = "文章所属目录列表")
-    private List<CatalogDTO> catalogList;
 }

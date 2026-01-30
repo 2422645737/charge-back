@@ -104,16 +104,7 @@ public class CatalogController {
         return ResponseResult.success(catalogService.delete(catalogId));
     }
 
-    /**
-     * 根据目录路径获取目录
-     * @param path 目录路径
-     * @return ResponseResult<CatalogDTO>
-     */
-    @Operation(summary = "根据目录路径获取目录")
-    @GetMapping("getByPath")
-    public ResponseResult<CatalogDTO> getByPath(@RequestParam("path") String path) {
-        return ResponseResult.success(catalogService.getByPath(path));
-    }
+
 
     /**
      * 根据目录层级获取目录

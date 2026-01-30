@@ -62,12 +62,7 @@ public interface CatalogService {
      */
     Boolean delete(Long catalogId);
 
-    /**
-     * 根据目录路径获取目录
-     * @param path 目录路径
-     * @return {@link CatalogDTO }
-     */
-    CatalogDTO getByPath(String path);
+
 
     /**
      * 根据目录层级获取目录

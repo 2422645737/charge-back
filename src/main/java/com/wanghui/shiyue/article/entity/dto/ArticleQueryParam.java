@@ -14,10 +14,4 @@ public class ArticleQueryParam {
     private Long articleID;
     
     private Long catalogId;
-    
-    private List<Long> catalogIds;
-    
-    private Integer catalogLevel;
-    
-    private String catalogPath;
 }

@@ -51,5 +51,5 @@ public interface ArticleService {
      * @param articleDTO
      * @return {@link Boolean }
      */
-    Boolean save(ArticleDTO articleDTO);
+    ArticleDTO save(ArticleDTO articleDTO);
 }

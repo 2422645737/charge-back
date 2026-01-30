@@ -24,6 +24,9 @@ public class ArticlePO extends BasePO {
     @Schema($schema = "目录id")
     private Long catalogId;
 
+    @Schema($schema = "文章状态 0：草稿   1：已保存")
+    private Integer status;
+
     @Schema($schema = "文章标题")
     private String title;
 

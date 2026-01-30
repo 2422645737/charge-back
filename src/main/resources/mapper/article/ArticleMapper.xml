@@ -3,7 +3,7 @@
 <mapper namespace="com.wanghui.shiyue.article.dao.ArticleMapper">
 
     <sql id="BaseSQL">
-        article_id,catalog_id,title,content,class_id,invalid_flag,create_time,invalid_flag,summary,cover
+        article_id,catalog_id,title,content,class_id,invalid_flag,create_time,invalid_flag,summary,cover,status
     </sql>
 
     <select id="queryByClassId" resultType="com.wanghui.shiyue.article.entity.po.ArticlePO">
@@ -37,7 +37,6 @@
             a.article_id,a.catalog_id,a.title,a.content,a.class_id,a.invalid_flag,a.create_time,a.summary,a.cover
         FROM article a
         LEFT JOIN web.article_catalog ac ON a.article_id = ac.article_id
-        LEFT JOIN web.catalog c ON ac.catalog_id = c.catalog_id
         WHERE 1=1
         <if test="classId != null">
             AND a.class_id = #{classId}
@@ -52,18 +51,6 @@
         </if>
         <if test="catalogId != null">
             AND ac.catalog_id = #{catalogId}
-        </if>
-        <if test="catalogIds != null and catalogIds.size() > 0">
-            AND ac.catalog_id IN
-            <foreach item="catalogId" collection="catalogIds" open="(" separator="," close=")">
-                #{catalogId}
-            </foreach>
-        </if>
-        <if test="catalogLevel != null">
-            AND c.level = #{catalogLevel}
-        </if>
-        <if test="catalogPath != null and catalogPath != ''">
-            AND c.path LIKE CONCAT(#{catalogPath}, '%')
         </if>
         GROUP BY a.article_id
     </select>

@@ -1,16 +1,21 @@
 package com.wanghui.shiyue.article.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.wanghui.shiyue.agent.mq.ArticleSummaryListener;
 import com.wanghui.shiyue.article.convert.ArticleConvert;
 import com.wanghui.shiyue.article.convert.TagConvert;
 import com.wanghui.shiyue.article.dao.ArticleMapper;
 import com.wanghui.shiyue.article.entity.dto.ArticleDTO;
 import com.wanghui.shiyue.article.entity.dto.ArticleQueryParam;
+import com.wanghui.shiyue.article.entity.dto.CatalogDTO;
 import com.wanghui.shiyue.article.entity.dto.TagDTO;
+import com.wanghui.shiyue.article.entity.enums.ArticleStatus;
 import com.wanghui.shiyue.article.entity.po.ArticlePO;
 import com.wanghui.shiyue.article.service.ArticleService;
 import com.wanghui.shiyue.article.service.ArticleTagService;
 import com.wanghui.shiyue.article.service.ArticleCatalogService;
 import com.wanghui.shiyue.article.service.TagService;
+import com.wanghui.shiyue.comm.kafka.component.MessageProducer;
 import com.wanghui.shiyue.comm.utils.IdGenerator;
 
 import org.springframework.stereotype.Service;
@@ -46,6 +51,9 @@ public class ArticleServiceImpl implements ArticleService {
     @Resource
     ArticleCatalogService articleCatalogService;
 
+    @Resource
+    MessageProducer messageProducer;
+
     /**
      * 通过文章id获取文章内容
      * @param articleId
@@ -57,11 +65,9 @@ public class ArticleServiceImpl implements ArticleService {
         //获取标签信息
         List<TagDTO> articleTags = tagService.getArticleTags(articleId);
         articleDTO.setTagList(articleTags);
-        
-        //获取目录信息
-        List<com.wanghui.shiyue.article.entity.dto.CatalogDTO> articleCatalogs = articleCatalogService.getArticleCatalogTree(articleId);
-        articleDTO.setCatalogList(articleCatalogs);
 
+        //发送mq，让模型生成摘要
+        messageProducer.send(ArticleSummaryListener.TOPIC, articleDTO);
         return articleDTO;
     }
 
@@ -96,35 +102,20 @@ public class ArticleServiceImpl implements ArticleService {
         List<ArticlePO> articlePOS = articleMapper.queryByMultiCondition(
                 param.getClassId(),
                 param.getTagIds(),
-                param.getCatalogId(),
-                param.getCatalogIds(),
-                param.getCatalogLevel(),
-                param.getCatalogPath()
+                param.getCatalogId()
         );
         
-        // 转换为DTO并设置标签和目录信息
+        // 转换为DTO并设置标签信息
         List<ArticleDTO> articleDTOS = articleConvert.posToDto(articlePOS);
         return setTagList(articleDTOS);
     }
 
     @Override
     @Transactional
-    public Boolean save(ArticleDTO articleDTO) {
-        // 数据验证
-        if (StringUtils.isBlank(articleDTO.getTitle())) {
-            throw new IllegalArgumentException("文章标题不能为空");
-        }
-        if (StringUtils.isBlank(articleDTO.getContent())) {
-            throw new IllegalArgumentException("文章内容不能为空");
-        }
-        if (articleDTO.getClassId() == null) {
-            throw new IllegalArgumentException("文章分类不能为空");
-        }
-
+    public ArticleDTO save(ArticleDTO articleDTO) {
         // 转换为PO对象
         ArticlePO articlePO = articleConvert.dtoToPo(articleDTO);
         articlePO.init();
-        articlePO.setArticleId(IdGenerator.generator());
 
         // 保存文章
         boolean saveResult;
@@ -136,6 +127,7 @@ public class ArticleServiceImpl implements ArticleService {
             // 删除旧的目录关联
             articleCatalogService.deleteByArticleId(articlePO.getArticleId());
         } else {
+            articlePO.setArticleId(IdGenerator.generator());
             // 新增操作
             saveResult = articleMapper.insert(articlePO) > 0;
         }
@@ -152,24 +144,16 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         // 保存目录关联
-        if (saveResult) {
-            // 保存主目录关联
-            if (articleDTO.getCatalogId() != null) {
-                articleCatalogService.saveArticleCatalogs(articlePO.getArticleId(), java.util.List.of(articleDTO.getCatalogId()));
-            }
-            // 保存多目录关联
-            if (articleDTO.getCatalogList() != null && !articleDTO.getCatalogList().isEmpty()) {
-                java.util.List<Long> catalogIds = articleDTO.getCatalogList().stream()
-                        .filter(catalog -> catalog.getCatalogId() != null)
-                        .map(com.wanghui.shiyue.article.entity.dto.CatalogDTO::getCatalogId)
-                        .collect(java.util.stream.Collectors.toList());
-                if (!catalogIds.isEmpty()) {
-                    articleCatalogService.saveArticleCatalogs(articlePO.getArticleId(), catalogIds);
-                }
-            }
+        if (saveResult && articleDTO.getCatalogId() != null) {
+            articleCatalogService.saveArticleCatalog(articlePO.getArticleId(), articleDTO.getCatalogId());
         }
 
-        return saveResult;
+        //发送mq，让模型生成摘要,仅仅对保存的才生效
+        if(ArticleStatus.DRAFT.getCode().equals(articlePO.getStatus())){
+            messageProducer.send(ArticleSummaryListener.TOPIC, articleConvert.poToDto(articlePO));
+        }
+
+        return articleConvert.poToDto(articlePO);
     }
 
     /**
@@ -181,8 +165,6 @@ public class ArticleServiceImpl implements ArticleService {
     private List<ArticleDTO> setTagList(List<ArticleDTO> articleDTOS) {
         articleDTOS.forEach(a -> {
             a.setTagList(tagService.getArticleTags(a.getArticleId()));
-            //设置目录信息
-            a.setCatalogList(articleCatalogService.getArticleCatalogTree(a.getArticleId()));
         });
         return articleDTOS;
     }
