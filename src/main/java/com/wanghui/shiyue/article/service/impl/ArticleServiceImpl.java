@@ -66,8 +66,6 @@ public class ArticleServiceImpl implements ArticleService {
         List<TagDTO> articleTags = tagService.getArticleTags(articleId);
         articleDTO.setTagList(articleTags);
 
-        //发送mq，让模型生成摘要
-        messageProducer.send(ArticleSummaryListener.TOPIC, articleDTO);
         return articleDTO;
     }
 
