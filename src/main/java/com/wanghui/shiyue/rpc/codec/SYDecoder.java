@@ -1,5 +1,7 @@
-package com.wanghui.shiyue.rpc.handler;
+package com.wanghui.shiyue.rpc.codec;
 
+import cn.hutool.json.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.wanghui.shiyue.rpc.message.Message;
 import com.wanghui.shiyue.rpc.message.Request;
 import com.wanghui.shiyue.rpc.message.Response;
@@ -7,13 +9,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
-import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-public class MessageDecoder extends LengthFieldBasedFrameDecoder {
+public class SYDecoder extends LengthFieldBasedFrameDecoder {
 
 
-    public MessageDecoder() {
+    public SYDecoder() {
         super(1024 * 1024, 0, 4, 0, 4);
     }
 
@@ -33,10 +35,10 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         byte[] body = new byte[frame.readableBytes()];
         frame.readBytes(body);
 
-        if(Message.MessageTyepe.REQUEST.getClass().equals(messageType)){
+        if(Message.MessageTyepe.REQUEST.getCode().equals(messageType)){
             return deserializeRequest(body);
         }
-        if(Message.MessageTyepe.RESPONSE.getClass().equals(messageType)){
+        if(Message.MessageTyepe.RESPONSE.getCode().equals(messageType)){
             return deserializeResponse(body);
         }
 
@@ -44,10 +46,10 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     }
 
     private Response deserializeResponse(byte[] body) {
-        return new Response();
+        return JSONObject.parseObject(new String(body, StandardCharsets.UTF_8), Response.class);
     }
 
     private Request deserializeRequest(byte[] body) {
-        return new Request();
+        return JSONObject.parseObject(new String(body, StandardCharsets.UTF_8), Request.class);
     }
 }

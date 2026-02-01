@@ -1,5 +1,9 @@
-package com.wanghui.shiyue.rpc;
+package com.wanghui.shiyue.rpc.provider;
 
+import com.wanghui.shiyue.rpc.codec.ResponseEncoder;
+import com.wanghui.shiyue.rpc.codec.SYDecoder;
+import com.wanghui.shiyue.rpc.message.Request;
+import com.wanghui.shiyue.rpc.message.Response;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
@@ -8,9 +12,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 
 public class ProviderServer {
 
@@ -35,20 +36,17 @@ public class ProviderServer {
                     .childHandler(new ChannelInitializer<NioSocketChannel>() {
                         @Override
                         protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
-                            nioSocketChannel.pipeline().addLast(new LineBasedFrameDecoder(1024))
-                                    .addLast(new StringDecoder())
-                                    .addLast(new StringEncoder())
-                                    .addLast(new SimpleChannelInboundHandler<String>() {
+                            nioSocketChannel.pipeline()
+                                    .addLast(new SYDecoder())
+                                    .addLast(new ResponseEncoder())
+                                    .addLast(new SimpleChannelInboundHandler<Request>() {
                                         @Override
                                         protected void channelRead0(ChannelHandlerContext channelHandlerContext,
-                                                                    String s) throws Exception {
-                                            String[] split = s.split(",");
-                                            String method = split[0];
-                                            int a = Integer.parseInt(split[1]);
-                                            int b = Integer.parseInt(split[2]);
-                                            if(method.equals("add"))                                    {
-                                                channelHandlerContext.writeAndFlush(add(a, b) + "\n");
-                                            }
+                                                                    Request request) throws Exception {
+                                            System.out.println(request);
+                                            Response response = new Response();
+                                            response.setData(1);
+                                            channelHandlerContext.writeAndFlush(response);
                                         }
                                     });
                         }

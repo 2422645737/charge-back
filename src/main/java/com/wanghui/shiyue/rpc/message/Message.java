@@ -21,5 +21,9 @@ public class Message {
         MessageTyepe(int code) {
             this.code = (byte)code;
         }
+
+        public Byte getCode(){
+            return this.code;
+        }
     }
 }

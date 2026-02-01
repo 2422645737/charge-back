@@ -1,5 +1,10 @@
-package com.wanghui.shiyue.rpc;
+package com.wanghui.shiyue.rpc.consumer;
 
+import com.wanghui.shiyue.rpc.codec.RequestEncoder;
+import com.wanghui.shiyue.rpc.codec.ResponseEncoder;
+import com.wanghui.shiyue.rpc.codec.SYDecoder;
+import com.wanghui.shiyue.rpc.message.Request;
+import com.wanghui.shiyue.rpc.message.Response;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -7,9 +12,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -25,22 +27,25 @@ public class Consumer {
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
                         nioSocketChannel.pipeline()
-                                .addLast(new LineBasedFrameDecoder(1024))
-                                .addLast(new StringDecoder())
-                                .addLast(new StringEncoder())
-                                .addLast(new SimpleChannelInboundHandler<String>() {
+                                .addLast(new SYDecoder())
+                                .addLast(new RequestEncoder())
+                                .addLast(new SimpleChannelInboundHandler<Response>() {
 
                                     @Override
-                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
-                                        int result = Integer.parseInt(s);
-                                        addResultFuture.complete(result);
-                                        channelHandlerContext.close();
+                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
+                                        System.out.println(response);
+                                        addResultFuture.complete(Integer.valueOf(response.getData().toString()));
                                     }
                                 });
                     }
                 });
         ChannelFuture localhost = bootstrap.connect("localhost", 8888).sync();
-        localhost.channel().writeAndFlush("add," + a + "," + b + "\n");
+        Request request = new Request();
+        request.setMethodName("add");
+        request.setParams(new Object[]{1,2});
+        request.setParameterTypes(new String[]{"int","int"});
+        request.setServiceName("bbb");
+        localhost.channel().writeAndFlush(request);
         return addResultFuture.get();
     }
 }
