@@ -1,11 +1,7 @@
 package com.wanghui.shiyue.agent.controller;
 
-import com.wanghui.shiyue.agent.entity.McpInvokeRequest;
-import com.wanghui.shiyue.agent.entity.McpInvokeResponse;
-import com.wanghui.shiyue.agent.entity.McpServerListResponse;
-import com.wanghui.shiyue.agent.entity.McpToolListResponse;
-import com.wanghui.shiyue.agent.entity.PipelineScheduleRequest;
-import com.wanghui.shiyue.agent.entity.PipelineScheduleResponse;
+import com.alibaba.fastjson.JSON;
+import com.wanghui.shiyue.agent.entity.*;
 import com.wanghui.shiyue.agent.handler.McpInvokeHandler;
 import com.wanghui.shiyue.agent.handler.PipelineScheduleHandler;
 import com.wanghui.shiyue.article.entity.dto.ArticleDTO;
@@ -170,9 +166,11 @@ public class AgentController {
 
     @Operation(summary = "智能助手聊天(支持工具调用)")
     @GetMapping(value = "chat")
-    public String chat(@RequestParam("message") String message) {
-        // 调用LangChain4j代理的助手接口，该助手已绑定了 FunctionCalling 中的工具
-        return assistant.chat(message);
+    public String chat(@RequestParam("id") String id, @RequestParam("message") String message) {
+        return assistant.chat(new SpecialistPrompt("java","今天天气怎么样"));
+//        return assistant.chat(id,message);
+//        return JSON.toJSONString(assistant.chatWithType(id,message));
+//        return assistant.chatWithParam(id,message,"嘟嘟");
     }
 
     @Operation(summary = "构建向量")
