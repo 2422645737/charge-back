@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wanghui.shiyue.todo.dao.TodoMapper">
+    <select id="queryByFilters" resultType="com.wanghui.shiyue.todo.entity.po.TodoPO">
+        SELECT
+        todo_id,
+        title,
+        remark,
+        due_time,
+        priority,
+        completed,
+        create_time,
+        update_time
+        FROM web.todo
+        WHERE 1=1
+        <if test="completed != null">
+            AND completed = #{completed}
+        </if>
+        <if test="priority != null">
+            AND priority = #{priority}
+        </if>
+        <if test="startTime != null">
+            AND due_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND due_time &lt;= #{endTime}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="orderByPriority != null and orderByPriority">
+                priority DESC, due_time ASC
+            </when>
+            <otherwise>
+                due_time ASC
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

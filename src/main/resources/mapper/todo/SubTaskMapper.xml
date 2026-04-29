@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wanghui.shiyue.todo.dao.SubTaskMapper">
+    <select id="listByTodoId" resultType="com.wanghui.shiyue.todo.entity.po.SubTaskPO">
+        SELECT sub_task_id, todo_id, parent_id, name, completed, create_time, update_time
+        FROM web.todo_subtask
+        WHERE todo_id = #{todoId}
+        ORDER BY parent_id NULLS FIRST, create_time ASC
+    </select>
+    <select id="listByParentId" resultType="com.wanghui.shiyue.todo.entity.po.SubTaskPO">
+        SELECT sub_task_id, todo_id, parent_id, name, completed, create_time, update_time
+        FROM web.todo_subtask
+        WHERE parent_id = #{parentId}
+        ORDER BY create_time ASC
+    </select>
+</mapper>

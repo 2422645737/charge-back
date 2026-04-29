@@ -1,0 +1,34 @@
+CREATE TABLE IF NOT EXISTS todo (
+    todo_id BIGINT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    remark VARCHAR(500),
+    due_time TIMESTAMP NOT NULL,
+    priority INTEGER NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS todo_subtask (
+    sub_task_id BIGINT PRIMARY KEY,
+    todo_id BIGINT NOT NULL REFERENCES todo(todo_id) ON DELETE CASCADE,
+    parent_id BIGINT NULL REFERENCES todo_subtask(sub_task_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_todo_due_time ON todo(due_time);
+CREATE INDEX IF NOT EXISTS idx_todo_priority ON todo(priority);
+CREATE INDEX IF NOT EXISTS idx_subtask_todo ON todo_subtask(todo_id);
+
+CREATE TABLE IF NOT EXISTS todo_log (
+    log_id BIGINT PRIMARY KEY,
+    action VARCHAR(64) NOT NULL,
+    target_id BIGINT NULL,
+    content TEXT,
+    result VARCHAR(32),
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
