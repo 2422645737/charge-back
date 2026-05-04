@@ -4,12 +4,13 @@ import com.wanghui.shiyue.agent.entity.PipelineScheduleRequest;
 import com.wanghui.shiyue.agent.entity.PipelineScheduleResponse;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.SystemMessage;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * LangChain4j 流水线式模型调度示例处理器（规划 -> 执行），并附带会话记忆功能。
+ * 基于 LangChain4j AiServices 的流水线式模型调度处理器（规划 -> 执行）。
+ * <p>
+ * 使用 AiServices 定义多阶段 Agent 接口进行链式调度，<br>
+ * 代替手动调用 ChatModel 的串行方式。
+ * <pre>
+ *   用户输入 ─→ [PlannerAgent] ─→ 执行计划 ─→ [ExecutorAgent] ─→ 最终回答
+ *                           ↕                            ↕
+ *                     渐进式记忆上下文（短期窗口 + 中期摘要 + 长期向量）
+ * </pre>
  */
 @Component
 public class PipelineScheduleHandler {
@@ -52,6 +61,63 @@ public class PipelineScheduleHandler {
      */
     private final Map<String, String> summaryMemoryStore = new ConcurrentHashMap<>();
 
+    private PlannerAgent plannerAgent;
+    private ExecutorAgent executorAgent;
+    private MemorySummarizerAgent summarizerAgent;
+
+    // ==================== AiServices Agent 接口定义 ====================
+
+    /**
+     * 规划器 Agent — 负责将复杂问题拆解为可执行步骤。
+     */
+    public interface PlannerAgent {
+        @SystemMessage("你是任务规划器。请根据用户问题和历史记忆，给出一个简短执行计划。"
+                + "输出要求：1. 只输出 3-5 条步骤 2. 每条以\"1. 2. 3.\"编号 3. 不要输出额外解释")
+        String plan(String prompt);
+    }
+
+    /**
+     * 执行器 Agent — 负责依据计划进行高质量回答。
+     */
+    public interface ExecutorAgent {
+        @SystemMessage("你是执行专家。请基于执行计划回答用户问题，并结合历史记忆保持上下文一致。"
+                + "输出要求：1. 直接给最终答案 2. 简洁清晰，中文输出 "
+                + "3. 当历史记忆与本轮问题相关时要引用其上下文")
+        String execute(String prompt);
+    }
+
+    /**
+     * 记忆摘要 Agent — 负责压缩和提炼对话长期记忆。
+     */
+    public interface MemorySummarizerAgent {
+        @SystemMessage("你是记忆压缩器。请将历史摘要与最新窗口对话合并为新的摘要记忆。"
+                + "输出要求：1. 保留用户偏好、事实信息、任务上下文 "
+                + "2. 删除冗余和重复表达 3. 用简体中文，控制在 600 字以内 4. 只输出摘要正文")
+        String summarize(String prompt);
+
+        @SystemMessage("下面是已写入向量库的长摘要，请再压缩成轻量摘要。"
+                + "输出要求：1. 保留关键身份信息、稳定偏好、长期目标 "
+                + "2. 不超过 200 字 3. 仅输出压缩结果")
+        String compress(String summary);
+    }
+
+    @PostConstruct
+    public void init() {
+        this.plannerAgent = AiServices.builder(PlannerAgent.class)
+                .chatModel(qwenChatModel)
+                .build();
+
+        this.executorAgent = AiServices.builder(ExecutorAgent.class)
+                .chatModel(qwenChatModel)
+                .build();
+
+        this.summarizerAgent = AiServices.builder(MemorySummarizerAgent.class)
+                .chatModel(qwenChatModel)
+                .build();
+
+        log.info("PipelineScheduleHandler AiServices 代理初始化完成");
+    }
+
     public PipelineScheduleResponse run(PipelineScheduleRequest request) {
         if (request == null || !StringUtils.hasText(request.getUserInput())) {
             throw new IllegalArgumentException("userInput不能为空");
@@ -66,8 +132,25 @@ public class PipelineScheduleHandler {
 
         String memoryContext = buildProgressiveMemoryContext(sessionId, request.getUserInput(), shortTermMemory);
 
-        String plan = stageOnePlan(request.getUserInput(), memoryContext);
-        String answer = stageTwoExecute(request.getUserInput(), plan, memoryContext);
+        // AiServices 链式调度：规划 → 执行
+        String plan = plannerAgent.plan("""
+                历史记忆：
+                %s
+
+                用户问题：
+                %s
+                """.formatted(memoryContext, request.getUserInput()));
+
+        String answer = executorAgent.execute("""
+                历史记忆：
+                %s
+
+                执行计划：
+                %s
+
+                用户问题：
+                %s
+                """.formatted(memoryContext, plan, request.getUserInput()));
 
         // 仅将用户真实输入和最终回复写入记忆，避免中间推理污染历史语义。
         shortTermMemory.add(UserMessage.from(request.getUserInput()));
@@ -99,61 +182,6 @@ public class PipelineScheduleHandler {
                 """.formatted(shortTermContext, summaryContext, longTermContext);
     }
 
-    private String stageOnePlan(String userInput, String memoryContext) {
-        log.info("▶ [Pipeline Stage-1] 生成执行计划，userInput={}", userInput);
-        String prompt = """
-                你是任务规划器。请根据用户问题和历史记忆，给出一个简短执行计划。
-                输出要求：
-                1. 只输出 3-5 条步骤
-                2. 每条以“1. 2. 3.”编号
-                3. 不要输出额外解释
-
-                历史记忆：
-                %s
-
-                用户问题：
-                %s
-                """.formatted(memoryContext, userInput);
-
-        return askModel(
-                "你擅长将复杂问题拆解为可执行步骤。",
-                prompt
-        );
-    }
-
-    private String stageTwoExecute(String userInput, String plan, String memoryContext) {
-        log.info("▶ [Pipeline Stage-2] 基于计划执行回答，userInput={}", userInput);
-        String prompt = """
-                你是执行专家。请基于执行计划回答用户问题，并结合历史记忆保持上下文一致。
-                输出要求：
-                1. 直接给最终答案
-                2. 简洁清晰，中文输出
-                3. 当历史记忆与本轮问题相关时要引用其上下文
-
-                历史记忆：
-                %s
-
-                执行计划：
-                %s
-
-                用户问题：
-                %s
-                """.formatted(memoryContext, plan, userInput);
-
-        return askModel(
-                "你擅长依据计划进行高质量回答。",
-                prompt
-        );
-    }
-
-    private String askModel(String systemPrompt, String userPrompt) {
-        ChatResponse response = qwenChatModel.chat(List.of(
-                SystemMessage.from(systemPrompt),
-                UserMessage.from(userPrompt)
-        ));
-        return response.aiMessage().text();
-    }
-
     private ChatMemory promoteWindowToSummaryIfNeeded(String sessionId, ChatMemory shortTermMemory) {
         List<ChatMessage> messages = shortTermMemory.messages();
         if (messages.size() < WINDOW_SUMMARY_TRIGGER_MESSAGES) {
@@ -163,7 +191,16 @@ public class PipelineScheduleHandler {
         log.info("▶ [Memory Upgrade] 会话 {} 触发摘要记忆压缩，窗口消息数={}", sessionId, messages.size());
         String windowContext = buildMemoryContext(messages);
         String existingSummary = summaryMemoryStore.getOrDefault(sessionId, "");
-        String mergedSummary = summarizeMemory(existingSummary, windowContext);
+        String mergedSummary = summarizerAgent.summarize("""
+                历史摘要：
+                %s
+
+                最新窗口对话：
+                %s
+                """.formatted(
+                StringUtils.hasText(existingSummary) ? existingSummary : "暂无历史摘要",
+                windowContext
+        ));
         summaryMemoryStore.put(sessionId, mergedSummary);
 
         if (mergedSummary.length() >= SUMMARY_VECTOR_THRESHOLD_CHARS) {
@@ -181,39 +218,8 @@ public class PipelineScheduleHandler {
         return compactedMemory;
     }
 
-    private String summarizeMemory(String existingSummary, String latestWindowContext) {
-        String prompt = """
-                你是记忆压缩器。请将历史摘要与最新窗口对话合并为新的摘要记忆。
-                输出要求：
-                1. 保留用户偏好、事实信息、任务上下文
-                2. 删除冗余和重复表达
-                3. 用简体中文，控制在 600 字以内
-                4. 只输出摘要正文
-
-                历史摘要：
-                %s
-
-                最新窗口对话：
-                %s
-                """.formatted(
-                StringUtils.hasText(existingSummary) ? existingSummary : "暂无历史摘要",
-                latestWindowContext
-        );
-        return askModel("你擅长提炼对话长期记忆。", prompt);
-    }
-
     private String compressSummaryAfterPersist(String summary) {
-        String prompt = """
-                下面是已写入向量库的长摘要，请再压缩成轻量摘要。
-                输出要求：
-                1. 保留关键身份信息、稳定偏好、长期目标
-                2. 不超过 200 字
-                3. 仅输出压缩结果
-
-                长摘要：
-                %s
-                """.formatted(summary);
-        String compressed = askModel("你擅长摘要二次压缩。", prompt);
+        String compressed = summarizerAgent.compress(summary);
         if (!StringUtils.hasText(compressed)) {
             return summary.substring(0, Math.min(summary.length(), 200));
         }
@@ -255,9 +261,6 @@ public class PipelineScheduleHandler {
         }
         if (chatMessage instanceof AiMessage aiMessage) {
             return aiMessage.text();
-        }
-        if (chatMessage instanceof SystemMessage systemMessage) {
-            return systemMessage.text();
         }
         return String.valueOf(chatMessage);
     }

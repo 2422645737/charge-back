@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(jar tf *)",
+      "Bash(javap -classpath langchain4j-1.13.1.jar dev.langchain4j.service.TokenStream)",
+      "Bash(javap -classpath langchain4j-1.13.1.jar dev.langchain4j.model.chat.StreamingChatModel)",
+      "Bash(javap -classpath langchain4j-open-ai-1.13.1.jar dev.langchain4j.model.openai.OpenAiStreamingChatModel)",
+      "Bash(javap -classpath langchain4j-1.13.1.jar dev.langchain4j.model.chat.ChatModel)",
+      "Bash(javap -classpath langchain4j-core-1.13.1.jar dev.langchain4j.model.chat.StreamingChatModel)",
+      "Bash(javap -classpath langchain4j-core-1.13.1.jar dev.langchain4j.model.chat.response.StreamingChatResponseHandler)",
+      "Bash(javap -cp langchain4j-core-1.13.1.jar dev.langchain4j.data.message.ImageContent)",
+      "Bash(javap -cp langchain4j-core-1.13.1.jar dev.langchain4j.data.message.UserMessage)",
+      "Bash(javap -cp langchain4j-community-dashscope-spring-boot-starter-1.13.1-beta23.jar dev.langchain4j.community.dashscope.spring.DashScopeAutoConfiguration)",
+      "Bash(javap -verbose -cp langchain4j-community-dashscope-spring-boot-starter-1.13.1-beta23.jar dev.langchain4j.community.dashscope.spring.DashScopeAutoConfiguration)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversation)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationParam)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationMessage)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationResult)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.common.Role)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationOutput)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar 'com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationOutput$Choice')",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.common.MultiModalMessage)",
+      "Bash(unzip -p langchain4j-community-dashscope-1.13.1-beta23.jar META-INF/maven/dev.langchain4j/langchain4j-community-dashscope/pom.xml)",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar 'com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationMessage$MultiModalConversationMessageBuilder')",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar 'com.alibaba.dashscope.aigc.multimodalconversation.MultiModalMessageItemImage')",
+      "Bash(javap -cp dashscope-sdk-java-2.22.13.jar 'com.alibaba.dashscope.aigc.multimodalconversation.MultiModalMessageItemText')",
+      "Bash(javap -verbose -cp dashscope-sdk-java-2.22.13.jar com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationMessage)",
+      "Bash(grep -v '\\\\$')"
+    ]
+  }
+}

@@ -3,6 +3,7 @@ package com.wanghui.shiyue.agent.controller;
 import com.alibaba.fastjson.JSON;
 import com.wanghui.shiyue.agent.entity.*;
 import com.wanghui.shiyue.agent.handler.McpInvokeHandler;
+import com.wanghui.shiyue.agent.handler.ParallelScheduleHandler;
 import com.wanghui.shiyue.agent.handler.PipelineScheduleHandler;
 import com.wanghui.shiyue.article.entity.dto.ArticleDTO;
 import com.wanghui.shiyue.article.service.ArticleService;
@@ -13,15 +14,26 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversation;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationMessage;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationParam;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversationResult;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalMessageItemImage;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalMessageItemText;
+import com.alibaba.dashscope.common.Role;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -38,6 +50,8 @@ import com.wanghui.shiyue.agent.handler.McpWebSearchHandler;
 import com.wanghui.shiyue.agent.handler.ReActTaskHandler;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +68,7 @@ public class AgentController {
     @Resource
     RedisService redisService;
 
-    @Resource
+    @Resource(name = "qwenChatModel")
     ChatModel qwenChatModel;
 
     @Resource
@@ -78,6 +92,12 @@ public class AgentController {
     @Resource
     PipelineScheduleHandler pipelineScheduleHandler;
 
+    @Resource
+    ParallelScheduleHandler parallelScheduleHandler;
+
+    @Resource
+    StreamingChatModel qwenStreamingChatModel;
+
     @Operation(summary = "ReAct任务调度")
     @GetMapping(value = "scheduleTask")
     public String scheduleTask(@RequestParam("task") String task) {
@@ -88,6 +108,80 @@ public class AgentController {
     @PostMapping(value = "pipelineSchedule")
     public ResponseResult<PipelineScheduleResponse> pipelineSchedule(@RequestBody PipelineScheduleRequest request) {
         return ResponseResult.success(pipelineScheduleHandler.run(request));
+    }
+
+    @Operation(summary = "并行专家模型调度(多角色并行)")
+    @PostMapping(value = "parallelSchedule")
+    public ResponseResult<ParallelScheduleResponse> parallelSchedule(@RequestBody ParallelScheduleRequest request) {
+        return ResponseResult.success(parallelScheduleHandler.run(request));
+    }
+
+    @Operation(summary = "图片识别(qwen3.6-plus视觉理解)")
+    @PostMapping(value = "imageRecognition")
+    public ResponseResult<String> imageRecognition(
+            @RequestParam(value = "prompt", required = false, defaultValue = "请详细描述这张图片中的内容") String prompt,
+            HttpServletRequest request) {
+        try {
+            String contentType = request.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                ResponseResult<String> result = ResponseResult.error();
+                result.setMessage("请上传图片文件，Content-Type 需为 image/*");
+                return result;
+            }
+            byte[] imageBytes = request.getInputStream().readAllBytes();
+            String base64Data = Base64.getEncoder().encodeToString(imageBytes);
+
+            MultiModalConversationMessage userMessage = MultiModalConversationMessage.builder()
+                    .role(Role.USER.getValue())
+                    .content(Arrays.asList(
+                            new MultiModalMessageItemImage("data:" + contentType + ";base64," + base64Data),
+                            new MultiModalMessageItemText(prompt)
+                    ))
+                    .build();
+
+            MultiModalConversationParam param = MultiModalConversationParam.builder()
+                    .apiKey("sk-0aba85d1bf224988ae2f34ae023293b7")
+                    .model("qwen3.6-plus")
+                    .messages(Arrays.asList(userMessage))
+                    .build();
+
+            MultiModalConversation conv = new MultiModalConversation();
+            MultiModalConversationResult result = conv.call(param);
+
+            String answer = (String) result.getOutput().getChoices().get(0)
+                    .getMessage().getContent().get(0).get("text");
+            return ResponseResult.success(answer);
+        } catch (Exception e) {
+            ResponseResult<String> result = ResponseResult.error();
+            result.setMessage("图片识别失败: " + e.getMessage());
+            return result;
+        }
+    }
+
+    @Operation(summary = "流式对话(SSE)")
+    @GetMapping(value = "streamChat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> streamChat(@RequestParam("message") String message) {
+        return Flux.create(sink -> {
+            qwenStreamingChatModel.chat(
+                    List.of(UserMessage.from(message)),
+                    new StreamingChatResponseHandler() {
+                        @Override
+                        public void onPartialResponse(String partialResponse) {
+                            sink.next(ServerSentEvent.builder(partialResponse).build());
+                        }
+
+                        @Override
+                        public void onCompleteResponse(ChatResponse response) {
+                            sink.next(ServerSentEvent.builder("[DONE]").build());
+                            sink.complete();
+                        }
+
+                        @Override
+                        public void onError(Throwable error) {
+                            sink.error(error);
+                        }
+                    });
+        });
     }
 
     @Operation(summary = "MCP联网搜索（百炼WebSearch）")
